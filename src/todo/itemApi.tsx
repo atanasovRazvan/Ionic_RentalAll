@@ -4,7 +4,7 @@ import { ItemProps } from './ItemProps';
 
 const log = getLogger('itemApi');
 
-const baseUrl = 'localhost:3000';
+const baseUrl = 'localhost:8080';
 const itemUrl = `http://${baseUrl}/item`;
 
 interface ResponseProps<T> {
@@ -40,6 +40,10 @@ export const createItem: (item: ItemProps) => Promise<ItemProps[]> = item => {
 
 export const updateItem: (item: ItemProps) => Promise<ItemProps[]> = item => {
   return withLogs(axios.put(`${itemUrl}/${item.id}`, item, config), 'updateItem');
+}
+
+export const deleteITEM: (id?: String) => Promise<ItemProps> = id => {
+  return withLogs(axios.delete(`${itemUrl}/${id}`, config), 'deleteItem');
 }
 
 interface MessageData {

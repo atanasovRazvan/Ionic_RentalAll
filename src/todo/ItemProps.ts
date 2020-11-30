@@ -1,4 +1,7 @@
 export interface ItemProps {
   id?: string;
-  text: string;
+  description: string;
+  price: string;
+  priceEstimation: string;
+  ownerUsername: string;
 }

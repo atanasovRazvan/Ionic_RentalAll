@@ -8,12 +8,17 @@ import {
   IonLoading,
   IonPage,
   IonTitle,
-  IonToolbar
+  IonToolbar,
+  IonLabel,
+  IonFab,
+  IonFabButton,
+  IonIcon
 } from '@ionic/react';
 import { getLogger } from '../core';
 import { ItemContext } from './ItemProvider';
 import { RouteComponentProps } from 'react-router';
 import { ItemProps } from './ItemProps';
+import { trashBin } from 'ionicons/icons';
 
 const log = getLogger('ItemEdit');
 
@@ -22,8 +27,11 @@ interface ItemEditProps extends RouteComponentProps<{
 }> {}
 
 const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
-  const { items, saving, savingError, saveItem } = useContext(ItemContext);
-  const [text, setText] = useState('');
+  const { items, saving, deleting, savingError, saveItem, deleteItem } = useContext(ItemContext);
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState('');
+  const [priceEstimation, setPriceEstimation] = useState('');
+  const [ownerUsername, setOwner] = useState('');
   const [item, setItem] = useState<ItemProps>();
   useEffect(() => {
     log('useEffect');
@@ -31,13 +39,20 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
     const item = items?.find(it => it.id === routeId);
     setItem(item);
     if (item) {
-      setText(item.text);
+      setDescription(item.description);
+      setPrice(item.price);
+      setPriceEstimation(item.priceEstimation);
+      setOwner(item.ownerUsername);
     }
   }, [match.params.id, items]);
   const handleSave = () => {
-    const editedItem = item ? { ...item, text } : { text };
+    const editedItem = item ? { ...item, description, price, priceEstimation, ownerUsername } : { description, price, priceEstimation, ownerUsername };
     saveItem && saveItem(editedItem).then(() => history.goBack());
   };
+  const handleDelete = () => {
+    deleteItem && deleteItem(item?.id).then(() => history.goBack());
+    log(item?.id);
+  }
   log('render');
   return (
     <IonPage>
@@ -52,11 +67,21 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
         </IonToolbar>
       </IonHeader>
       <IonContent>
-        <IonInput value={text} onIonChange={e => setText(e.detail.value || '')} />
+          <IonLabel>Description: </IonLabel><IonInput value={description} onIonChange={e => setDescription(e.detail.value || '')} />
+          <IonLabel>Price: </IonLabel><IonInput value={price} onIonChange={e => setPrice(e.detail.value || '')} />
+          <IonLabel>Estimated Price: </IonLabel><IonInput value={priceEstimation} onIonChange={e => setPriceEstimation(e.detail.value || '')} />
+          <IonLabel>Owner: </IonLabel><IonInput value={ownerUsername} onIonChange={e => setOwner(e.detail.value || '')} />
         <IonLoading isOpen={saving} />
         {savingError && (
           <div>{savingError.message || 'Failed to save item'}</div>
         )}
+
+        <IonFab vertical="bottom" horizontal="end" slot="fixed">
+          <IonFabButton onClick={handleDelete}>
+            <IonIcon icon={trashBin} />
+          </IonFabButton>
+        </IonFab>
+
       </IonContent>
     </IonPage>
   );
