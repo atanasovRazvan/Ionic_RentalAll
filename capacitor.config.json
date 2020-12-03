@@ -1,9 +1,9 @@
 {
-  "appId": "io.ionic.starter",
-  "appName": "myApp",
+  "appId": "com.rentalapp.com",
+  "appName": "Ionic RentalApp",
   "bundledWebRuntime": false,
   "npmClient": "npm",
-  "webDir": "build",
+  "webDir": "www",
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 0

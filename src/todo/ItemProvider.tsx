@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import { getLogger } from '../core';
 import { ItemProps } from './ItemProps';
 import { createItem, deleteITEM, getItems, newWebSocket, updateItem } from './itemApi';
+import { Plugins } from '@capacitor/core';
+
+const {Storage} = Plugins;
 
 const log = getLogger('ItemProvider');
 
@@ -52,7 +55,7 @@ const reducer: (state: ItemsState, action: ActionProps) => ItemsState =
       case FETCH_ITEMS_SUCCEEDED:
         return { ...state, items: payload.items, fetching: false };
       case FETCH_ITEMS_FAILED:
-        return { ...state, fetchingError: payload.error, fetching: false };
+        return { ...state, items: payload.items, fetchingError: payload.error, fetching: false };
       case SAVE_ITEM_STARTED:
         return { ...state, savingError: null, saving: true };
       case SAVE_ITEM_SUCCEEDED:{
@@ -93,6 +96,7 @@ interface ItemProviderProps {
 }
 
 export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
+
   const [state, dispatch] = useReducer(reducer, initialState);
   const { items, fetching, fetchingError, saving, deleting, savingError } = state;
   useEffect(getItemsEffect, []);
@@ -118,14 +122,43 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
       try {
         log('fetchItems started');
         dispatch({ type: FETCH_ITEMS_STARTED });
-        const items = await getItems();
+        const items = await getItems((await Storage.get({key: 'token'})).value);
+
         log('fetchItems succeeded');
         if (!canceled) {
           dispatch({ type: FETCH_ITEMS_SUCCEEDED, payload: { items } });
         }
+
+        let allItems = {...items};
+
+        for(let i = 0; i < items.length; i ++)
+          await Storage.set({
+            key: "item" + allItems[i].id,
+            value: JSON.stringify({
+              description: allItems[i].description,
+              price: allItems[i].price,
+              estimatedPrice: allItems[i].priceEstimation,
+              ownerUsername: allItems[i].ownerUsername
+            })
+          });
+
       } catch (error) {
         log('fetchItems failed');
-        dispatch({ type: FETCH_ITEMS_FAILED, payload: { error } });
+        
+        const { keys } = await Storage.keys();
+        let allItems = new Array();
+
+        for(let i = 0; i < keys.length; i ++)
+          if(keys[i] !== 'token'){
+            const ret = await Storage.get({key: keys[i]});
+            const result = JSON.parse(ret.value || '{}');
+            allItems.push(result)
+          }
+
+        const items = allItems;
+
+        dispatch({ type: FETCH_ITEMS_FAILED, payload: { items, error } });
+
       }
     }
   }

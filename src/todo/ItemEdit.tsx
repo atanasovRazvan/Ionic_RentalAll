@@ -51,7 +51,6 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
   };
   const handleDelete = () => {
     deleteItem && deleteItem(item?.id).then(() => history.goBack());
-    log(item?.id);
   }
   log('render');
   return (

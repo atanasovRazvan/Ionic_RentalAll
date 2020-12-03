@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logoYahoo } from 'ionicons/icons';
 import { getLogger } from '../core';
 import { ItemProps } from './ItemProps';
 
@@ -30,8 +31,8 @@ const config = {
   }
 };
 
-export const getItems: () => Promise<ItemProps[]> = () => {
-  return withLogs(axios.get(itemUrl, config), 'getItems');
+export const getItems: (token: string | null) => Promise<ItemProps[]> = token => {
+  return withLogs(axios.put(itemUrl, token, config), 'getItems');
 }
 
 export const createItem: (item: ItemProps) => Promise<ItemProps[]> = item => {
