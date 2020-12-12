@@ -27,11 +27,13 @@ interface ItemEditProps extends RouteComponentProps<{
 }> {}
 
 const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
-  const { items, saving, deleting, savingError, saveItem, deleteItem } = useContext(ItemContext);
+  const { items, saving, deleting, savingPending, savingError, saveItem, deleteItem } = useContext(ItemContext);
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [priceEstimation, setPriceEstimation] = useState('');
   const [ownerUsername, setOwner] = useState('');
+  const [version, setVersion] = useState(0);
+  const [status, setStatus] = useState(true);
   const [item, setItem] = useState<ItemProps>();
   useEffect(() => {
     log('useEffect');
@@ -43,16 +45,19 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
       setPrice(item.price);
       setPriceEstimation(item.priceEstimation);
       setOwner(item.ownerUsername);
+      setVersion(item.version);
+      setStatus(item.status);
     }
   }, [match.params.id, items]);
   const handleSave = () => {
-    const editedItem = item ? { ...item, description, price, priceEstimation, ownerUsername } : { description, price, priceEstimation, ownerUsername };
+    const editedItem = item ? { ...item, description, price, priceEstimation, ownerUsername, version, status } : { description, price, priceEstimation, ownerUsername, version, status };
     saveItem && saveItem(editedItem).then(() => history.goBack());
   };
   const handleDelete = () => {
     deleteItem && deleteItem(item?.id).then(() => history.goBack());
   }
   log('render');
+  
   return (
     <IonPage>
       <IonHeader>

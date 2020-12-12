@@ -1,35 +1,24 @@
 import axios from 'axios';
-import { logoYahoo } from 'ionicons/icons';
-import { getLogger } from '../core';
+import { getLogger, withLogs } from '../core';
 import { ItemProps } from './ItemProps';
+import { Plugins } from '@capacitor/core';
+
+const { Storage, Network } = Plugins;
 
 const log = getLogger('itemApi');
 
 const baseUrl = 'localhost:8080';
 const itemUrl = `http://${baseUrl}/item`;
 
-interface ResponseProps<T> {
-  data: T;
-}
-
-function withLogs<T>(promise: Promise<ResponseProps<T>>, fnName: string): Promise<T> {
-  log(`${fnName} - started`);
-  return promise
-    .then(res => {
-      log(`${fnName} - succeeded`);
-      return Promise.resolve(res.data);
-    })
-    .catch(err => {
-      log(`${fnName} - failed`);
-      return Promise.reject(err);
-    });
-}
-
 const config = {
   headers: {
     'Content-Type': 'application/json'
   }
 };
+
+export const getItem: (id: string | undefined) => Promise<ItemProps> = id => {
+  return withLogs(axios.get(`${itemUrl}/${id}`, config), 'getItem');
+}
 
 export const getItems: (token: string | null) => Promise<ItemProps[]> = token => {
   return withLogs(axios.put(itemUrl, token, config), 'getItems');
@@ -40,7 +29,24 @@ export const createItem: (item: ItemProps) => Promise<ItemProps[]> = item => {
 }
 
 export const updateItem: (item: ItemProps) => Promise<ItemProps[]> = item => {
-  return withLogs(axios.put(`${itemUrl}/${item.id}`, item, config), 'updateItem');
+  var result = axios.put(`${itemUrl}/${item.id}`, item, config);
+  Network.getStatus().then(async status => {
+    if(status.connected === false){
+      await Storage.set(
+        { key: "item_save" + item.id,
+          value: JSON.stringify({
+          description: item.description,
+          price: item.price,
+          priceEstimation: item.priceEstimation,
+          ownerUsername: item.ownerUsername,
+          version: item.version,
+          status: false
+        })
+        }
+      );
+    }
+  })
+  return withLogs(result, 'updateItem');
 }
 
 export const deleteITEM: (id?: String) => Promise<ItemProps> = id => {

@@ -15,7 +15,8 @@ import {
   IonItem,
   IonSelect,
   IonSelectOption,
-  IonLabel
+  IonLabel,
+  IonBadge
 } from '@ionic/react';
 import { add } from 'ionicons/icons';
 import Item from './Item';
@@ -24,20 +25,49 @@ import { ItemContext } from './ItemProvider';
 import { AuthContext } from '../auth'
 import { IonInfiniteScroll, IonInfiniteScrollContent} from '@ionic/react';
 import { ItemProps } from './ItemProps';
+import { Network } from '@capacitor/core';
 
 const log = getLogger('ItemList');
 
+let NStatus = "Online";
+
+Network.addListener("networkStatusChange", status => {
+  NStatus = status.connected === true ? "Online" : "Offline";
+  log(NStatus, "in listener");
+})
+
 const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
 
-  const { items, fetching, fetchingError } = useContext(ItemContext);
+  const [networkStatus, setNetworkStatus] = useState<string>(NStatus);
+  Network.addListener("networkStatusChange", status => {
+    setNetworkStatus(status.connected === true ? "Online" : "Offline");
+    log(networkStatus, "in listener");
+  })
+
+  const { items, conflictualItems, fetching, fetchingError, savingPending, saveItem } = useContext(ItemContext);
   const { logout } = useContext(AuthContext);
 
   const[disableInfiniteScroll, setDisableInfiniteScroll] = useState<boolean>(false);
   const[pos, setPos] = useState(5);
+  const[conflict, setConflict] = useState<boolean>(false);
 
   const[filter, setFilter] = useState<string | undefined>("any price");
   const selectOptions = ["<=500 EUR", ">500 EUR", "any price"];
   const [searchText, setSearchText] = useState<string>("");
+
+  const renderColor = () => {
+    return networkStatus === "Online" ? "primary" : "danger";
+  }
+
+  const renderStatus = () => {
+    return networkStatus;
+  }
+
+  useEffect(() => {
+    log(networkStatus, "in useEffect()");
+  }, [networkStatus]);
+
+  const networkStatusView = <IonBadge color = { renderColor() }>Network status: { renderStatus() }</IonBadge>
 
   const [apartmentsShow, setApartmentsShow] = useState<ItemProps[]>([]);
 
@@ -45,7 +75,6 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
     logout?.();
     return <Redirect to={{pathname: "/login"}} />;
   }
-
 
   async function searchNext($event: CustomEvent<void>)
     {
@@ -61,47 +90,93 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
       await ($event.target as HTMLIonInfiniteScrollElement).complete();
     }
 
-    log('render');
+  log('render');
 
-    useEffect(() =>{
-      if(items?.length){
-        setApartmentsShow(items.slice(0, pos));
+  useEffect(() =>{
+    if(items?.length){
+      setApartmentsShow(items.slice(0, pos));
+    }
+  }, [items]);
+
+  //filter
+  useEffect(()=>{
+    if(filter && items){
+      if(filter === "<=500 EUR"){
+        setApartmentsShow(items.filter((item) => Number.parseInt(item.price) <= 500) );
       }
-    }, [items]);
-
-    //filter
-    useEffect(()=>{
-      if(filter && items){
-        if(filter === "<=500 EUR"){
-          setApartmentsShow(items.filter((item) => Number.parseInt(item.price) <= 500) );
-        }
-        else if(filter === ">500 EUR"){
-          setApartmentsShow(items.filter((item) => Number.parseInt(item.price) > 500) );
-
-        }
-        else if(filter === "any price"){
-          setApartmentsShow(items);
+      else if(filter === ">500 EUR"){
+        setApartmentsShow(items.filter((item) => Number.parseInt(item.price) > 500) );
       }
-      }
-    }, [filter]);
-
-    //search
-    useEffect(()=>{
-      if(searchText === "" && items){
+      else if(filter === "any price"){
         setApartmentsShow(items);
-
       }
-      if(searchText && items){
-        setApartmentsShow(items.filter((item) => item.description.startsWith(searchText)));
-      }
-    },[searchText]);
+    }
+  }, [filter]);
 
+  //search
+  useEffect(()=>{
+    if(searchText === "" && items){
+      setApartmentsShow(items);
+
+    }
+    if(searchText && items){
+      setApartmentsShow(items.filter((item) => item.description.startsWith(searchText)));
+    }
+  },[searchText]);
+    
+  useEffect(() => {
+    if(savingPending === true){
+      setConflict(true);
+    }
+    else{
+      setConflict(false);
+    }
+  }, [savingPending]);
+
+  async function handleEdit(id : string | undefined) {
+    const item = conflictualItems?.find(it => it.id === id);
+    if(item && item.id){
+        console.log(item);
+        item.id = item.id.split('_')[0];
+        item.version = item.version+1;
+        console.log(item);
+        saveItem && saveItem(item);
+    }
+    return;
+
+  }
+
+  if(conflict === true){
+    return (
+    <IonPage>
+      <IonHeader>
+        <IonToolbar>
+          <IonTitle>Conflicts</IonTitle>
+        </IonToolbar>
+      </IonHeader>
+      <IonContent>
+          
+        <IonList>
+            {conflictualItems?.map((item: ItemProps) => 
+                <Item key={item.id} id={item.id} description={item.description} 
+                    price={item.price} priceEstimation={item.priceEstimation} ownerUsername={item.ownerUsername} 
+                    version={item.version} status={item.status} onEdit = {id => handleEdit(id)}>
+                </Item>)}
+        </IonList>
+
+      </IonContent>
+    </IonPage>
+    )}
+
+  else
+  log("ITEMS: ", items);
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonButton slot="end" onClick = {handleLogout}>Logout</IonButton>
           <IonTitle>EasyRENT</IonTitle>
+          { networkStatusView }
         </IonToolbar>
         <IonSearchbar value={searchText} debounce={500} onIonChange={(e) => setSearchText(e.detail.value!)}/>
 
@@ -124,7 +199,7 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonList>
               <Item key={item.id} id={item.id} description={item.description} 
                 price={item.price} priceEstimation={item.priceEstimation} ownerUsername={item.ownerUsername} 
-                onEdit={id => history.push(`/item/${id}`)} />
+                version={item.version} status={item.status} onEdit={id => history.push(`/item/${id}`)} />
             </IonList>
             );
         })}

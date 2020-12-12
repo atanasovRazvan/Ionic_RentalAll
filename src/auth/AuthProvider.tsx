@@ -28,7 +28,7 @@ const initialState: AuthState = {
   isAuthenticating: false,
   authenticationError: null,
   pendingAuthentication: false,
-  token: '',
+  token: "",
 };
 
 export const AuthContext = React.createContext<AuthState>(initialState);
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     });
     (async () =>{
-      await Storage.remove({key: "token"});
+      await Storage.clear();
     })();
   }
 
@@ -84,7 +84,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     async function authenticate() {
 
       var tokenStorage = await Storage.get({key: "token"});
-      console.log("user token " + tokenStorage.value);
       if (tokenStorage.value) {
         setState({
             ...state,
