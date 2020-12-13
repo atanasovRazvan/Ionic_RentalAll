@@ -40,7 +40,10 @@ export const updateItem: (item: ItemProps) => Promise<ItemProps[]> = item => {
           priceEstimation: item.priceEstimation,
           ownerUsername: item.ownerUsername,
           version: item.version,
-          status: false
+          status: false,
+          lat: item.lat,
+          lng: item.lng,
+          photoPath: item.photoPath
         })
         }
       );

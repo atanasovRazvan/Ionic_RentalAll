@@ -6,4 +6,7 @@ export interface ItemProps {
   ownerUsername: string;
   version: number;
   status: boolean;
+  lat: number;
+  lng: number;
+  photoPath: string;
 }

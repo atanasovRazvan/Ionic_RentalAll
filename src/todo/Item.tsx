@@ -1,5 +1,5 @@
 import React from 'react';
-import { IonItem, IonCard, IonCardTitle, IonCardSubtitle, IonCardHeader, IonCardContent, IonBadge, IonFab, IonIcon } from '@ionic/react';
+import { IonItem, IonCard, IonCardTitle, IonCardSubtitle, IonCardHeader, IonCardContent, IonBadge, IonFab, IonIcon, IonLabel, IonImg } from '@ionic/react';
 import { ItemProps } from './ItemProps';
 import { alertCircleOutline } from 'ionicons/icons';
 
@@ -7,13 +7,14 @@ interface ItemPropsExt extends ItemProps {
   onEdit: (id?: string) => void;
 }
 
-const Item: React.FC<ItemPropsExt> = ({ id, description, price, priceEstimation, ownerUsername, status, onEdit }) => {
+const Item: React.FC<ItemPropsExt> = ({ id, description, price, priceEstimation, ownerUsername, status, photoPath, onEdit }) => {
 
   function viewStatus(status: boolean){
     if(status === false)
       return <IonFab horizontal="end"> <IonIcon icon={alertCircleOutline} /> </IonFab>
   }
 
+  console.log(photoPath);
   return (
     <IonItem onClick={() => onEdit(id)}>
       <IonCard>
@@ -25,6 +26,8 @@ const Item: React.FC<ItemPropsExt> = ({ id, description, price, priceEstimation,
         </IonCardHeader>
         <IonCardContent>
           {description}
+          <br></br>
+          <IonLabel><IonImg style={{width: "100px"}} alt={"NO PHOTO"} src={photoPath}/></IonLabel>
         </IonCardContent>
       </IonCard>
     </IonItem>

@@ -198,7 +198,10 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
               priceEstimation: allItems[i].priceEstimation,
               ownerUsername: allItems[i].ownerUsername,
               version: allItems[i].version,
-              status: true
+              status: true,
+              lat: allItems[i].lat,
+              lng: allItems[i].lng,
+              photoPath: allItems[i].photoPath
             })
           });
 

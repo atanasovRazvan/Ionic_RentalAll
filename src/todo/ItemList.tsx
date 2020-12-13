@@ -160,7 +160,8 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
             {conflictualItems?.map((item: ItemProps) => 
                 <Item key={item.id} id={item.id} description={item.description} 
                     price={item.price} priceEstimation={item.priceEstimation} ownerUsername={item.ownerUsername} 
-                    version={item.version} status={item.status} onEdit = {id => handleEdit(id)}>
+                    version={item.version} status={item.status} lat={item.lat} lng={item.lng} photoPath={item.photoPath} 
+                    onEdit = {id => handleEdit(id)}>
                 </Item>)}
         </IonList>
 
@@ -199,7 +200,8 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonList>
               <Item key={item.id} id={item.id} description={item.description} 
                 price={item.price} priceEstimation={item.priceEstimation} ownerUsername={item.ownerUsername} 
-                version={item.version} status={item.status} onEdit={id => history.push(`/item/${id}`)} />
+                version={item.version} status={item.status} lat={item.lat} lng={item.lng} photoPath={item.photoPath} 
+                onEdit={id => history.push(`/item/${id}`)} />
             </IonList>
             );
         })}
