@@ -5,3 +5,4 @@ Offline support
 Managing version conflicts
 Google Maps - saving location for items
 Camera - make / upload a photo for an item
+Animations - simple, grouped, chained, overwrited
