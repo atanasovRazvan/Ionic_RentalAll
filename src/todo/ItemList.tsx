@@ -18,7 +18,7 @@ import {
   IonLabel,
   IonBadge
 } from '@ionic/react';
-import { add } from 'ionicons/icons';
+import { add, list } from 'ionicons/icons';
 import Item from './Item';
 import { getLogger } from '../core';
 import { ItemContext } from './ItemProvider';
@@ -26,6 +26,7 @@ import { AuthContext } from '../auth'
 import { IonInfiniteScroll, IonInfiniteScrollContent} from '@ionic/react';
 import { ItemProps } from './ItemProps';
 import { Network } from '@capacitor/core';
+import { createAnimation, Animation } from "@ionic/core";
 
 const log = getLogger('ItemList');
 
@@ -67,7 +68,7 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
     log(networkStatus, "in useEffect()");
   }, [networkStatus]);
 
-  const networkStatusView = <IonBadge color = { renderColor() }>Network status: { renderStatus() }</IonBadge>
+  const networkStatusView = <IonBadge className="status" color = { renderColor() } style={{marginLeft: "2rem"}}>Network status: { renderStatus() }</IonBadge>
 
   const [apartmentsShow, setApartmentsShow] = useState<ItemProps[]>([]);
 
@@ -146,6 +147,9 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
 
   }
 
+  useEffect(simpleStatusAnimation, [networkStatus]);
+  useEffect(groupedAnimation, []);
+
   if(conflict === true){
     return (
     <IonPage>
@@ -179,9 +183,9 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
           <IonTitle>EasyRENT</IonTitle>
           { networkStatusView }
         </IonToolbar>
-        <IonSearchbar value={searchText} debounce={500} onIonChange={(e) => setSearchText(e.detail.value!)}/>
+        <IonSearchbar className="searchBar" value={searchText} debounce={500} onIonChange={(e) => setSearchText(e.detail.value!)}/>
 
-        <IonItem>
+        <IonItem className="filterBar">
             <IonLabel>Filter products by rating</IonLabel>
             <IonSelect value={filter} onIonChange={(e) => setFilter(e.detail.value)}>
                 {selectOptions.map((option) => (
@@ -198,10 +202,12 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
         {items && apartmentsShow.map((item: ItemProps) => {
             return(
             <IonList>
-              <Item key={item.id} id={item.id} description={item.description} 
+              <div className="item">
+                <Item key={item.id} id={item.id} description={item.description} 
                 price={item.price} priceEstimation={item.priceEstimation} ownerUsername={item.ownerUsername} 
                 version={item.version} status={item.status} lat={item.lat} lng={item.lng} photoPath={item.photoPath} 
                 onEdit={id => history.push(`/item/${id}`)} />
+              </div>
             </IonList>
             );
         })}
@@ -221,6 +227,55 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
       </IonContent>
     </IonPage>
   );
+
+  function simpleStatusAnimation(){
+    const el = document.querySelector(".status");
+    if(el){
+      const animation = createAnimation()
+      .addElement(el)
+      .easing("ease-in-out")
+      .duration(1000)
+      .direction("alternate")
+      .iterations(4)
+      .keyframes([
+        { offset: 0, transform: "scale(1)", opacity: "1" },
+        { offset: 1, transform: "scale(1.5)", opacity: "0.5" }
+      ]);
+      animation.play();
+    }
+  }
+
+  function groupedAnimation(){
+    const searchBar = document.querySelector(".searchBar");
+    const filterBar = document.querySelector(".filterBar");
+
+    if(searchBar && filterBar){
+      const searchAnimation = createAnimation()
+        .addElement(searchBar)
+        .duration(2000)
+        .iterations(1)
+        .keyframes([
+          { offset: 0, transform: 'translateX(-75px)', opacity: '0' },
+          { offset: 0.3, transform: 'translateX(75px)', opacity: '0.5'},
+          { offset: 1, transform: 'translateX(0px)', opacity: '1' }
+        ]);
+
+      const filterAnimation = createAnimation()
+        .addElement(filterBar)
+        .duration(2000)
+        .iterations(1)
+        .keyframes([
+          { offset: 0, transform: 'translateX(75px)', opacity: '0' },
+          { offset: 0.3, transform: 'translateX(-75px)', opacity: '0.5'},
+          { offset: 1, transform: 'translateX(0px)', opacity: '1' }
+        ]);
+
+      const parentAnimation = createAnimation()
+        .addAnimation([searchAnimation, filterAnimation]);
+      parentAnimation.play();
+    }
+  }
+
 };
 
 export default ItemList;

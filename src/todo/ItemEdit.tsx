@@ -23,6 +23,7 @@ import { ItemProps } from './ItemProps';
 import { trashBin, camera, trash, close } from 'ionicons/icons';
 import { MyMap } from '../utilities/MyMap';
 import { usePhotoGallery, Photo } from '../utilities/usePhotoGallery';
+import { createAnimation, Animation } from "@ionic/core";
 
 const log = getLogger('ItemEdit');
 
@@ -79,6 +80,7 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
     setLng(e.latLng.lng());
   }
 
+  useEffect(chainedAnimation, []);
   log('render');
   
   return (
@@ -94,10 +96,10 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
         </IonToolbar>
       </IonHeader>
       <IonContent>
-          <IonLabel>Description: </IonLabel><IonInput value={description} onIonChange={e => setDescription(e.detail.value || '')} />
-          <IonLabel>Price: </IonLabel><IonInput value={price} onIonChange={e => setPrice(e.detail.value || '')} />
-          <IonLabel>Estimated Price: </IonLabel><IonInput value={priceEstimation} onIonChange={e => setPriceEstimation(e.detail.value || '')} />
-          <IonLabel>Owner: </IonLabel><IonInput value={ownerUsername} onIonChange={e => setOwner(e.detail.value || '')} />
+          <div className="animatedElement"><IonLabel>Description: </IonLabel><IonInput value={description} onIonChange={e => setDescription(e.detail.value || '')} /></div>
+          <div className="animatedElement"><IonLabel>Price: </IonLabel><IonInput value={price} onIonChange={e => setPrice(e.detail.value || '')} /></div>
+          <div className="animatedElement"><IonLabel>Estimated Price: </IonLabel><IonInput value={priceEstimation} onIonChange={e => setPriceEstimation(e.detail.value || '')} /></div>
+          <div className="animatedElement"><IonLabel>Owner: </IonLabel><IonInput value={ownerUsername} onIonChange={e => setOwner(e.detail.value || '')} /></div>
 
           <IonImg style={{width: "400px", height: "400px", margin: "0 auto"}} alt={"No photo"}
               onClick = {() => {setPhotoToDelete(photos?.find(vd => vd.webviewPath === photoPath))}}
@@ -158,6 +160,32 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
       </IonContent>
     </IonPage>
   );
+
+  function chainedAnimation(){
+    const labels = document.querySelectorAll(".animatedElement");
+    let animations: Array<Animation> = []
+    if(labels){
+      labels.forEach(el => {
+        const animation = createAnimation()
+        .addElement(el)
+        .duration(500)
+        .iterations(1)
+        .keyframes([
+          { offset: 0, transform: 'translateX(-75px)', opacity: '0' },
+          { offset: 0.3, transform: 'translateX(100px)', opacity: '0.5' },
+          { offset: 1, transform: 'translateX(0px)', opacity: '1' }
+        ]);
+        animations.push(animation);
+    });
+
+    (async () => {
+      for(let i = 0; i < 4; i ++)
+        await animations[i].play();
+    })()
+
+    }
+  }
+
 };
 
 export default ItemEdit;
